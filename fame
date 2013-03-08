@@ -57,7 +57,7 @@ gfx()
 			echo -e ""$PURPLE"           #+#          #+#     #+#     #+#       #+#     #+#               "
 			echo -e ""$PURPLE"          ###      "$YELLOW" * "$PURPLE" ###     ### "$YELLOW" * "$PURPLE" ###       ### "$YELLOW" * "$PURPLE" ##########         "
 			echo
-			echo -e ""$DEF"                    Fine "$LIGHTBLACK"-"$DEF" Automated "$LIGHTBLACK"-"$DEF" Minecraft "$LIGHTBLACK"-"$DEF" Exports "
+			echo -e ""$WHITE"                    Fine "$LIGHTBLACK"-"$WHITE" Automated "$LIGHTBLACK"-"$WHITE" Minecraft "$LIGHTBLACK"-"$WHITE" Exports"
 			echo
 			echo
 			echo -e "                          "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"$DEF""
@@ -66,8 +66,21 @@ gfx()
 			echo
 			sleep 2
 			clear
-			
 			;;
+
+		header)
+			clear
+			timeupdate
+			echo -e "$fametext"$WHITE" build $APPVERSION - $HMS" 
+			echo -e "0 Successful backups, 49 Warnings, 2 Errors"$DEF""
+			gfx line
+			echo
+			;;
+
+		line)
+			echo -e ""$DEF""$PURPLE"--------------------------------------------------------------------------------"$DEF""
+			;;
+
 		termreset)
 			echo Terminal size changed, resetting...
 			PREVIOUSCOLUMNS=`tput cols`
@@ -185,11 +198,12 @@ cleanup()
 
 clear
 gfx splash # Display splash screen with logo
+gfx header
 fameprocess
-echo -e "$fametext BITCH"
 echo Detected world:
 echo
 echo "SERVERDESC: $SERVERDESC"
 echo "SCREENNAME: $SERVERSCREEN"
 echo "SERVERPATH: $SERVERPATH"
 
+echo -e ""
