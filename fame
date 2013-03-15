@@ -98,6 +98,7 @@ timeupdate() # Sets current time into different variables. Used for timestamping
 {
 	DATE=$(date +"%d-%m-%Y")
 	UNIXSTAMP=$(date +%s)
+	BKSTAMP=""$SERVERSCREEN"_backup_$(date +"%m-%d-%Y")_$(date +"%Hh%Mm%Ss")_fbck.tar.gz"
 	NOWSTAMP=$(date +"%Hh%Mm%Ss")
 	HM=$(date +"%R")
 	HMS=$(date +"%R:%S")
@@ -130,8 +131,10 @@ fameprocess()
 backup()
 {
 	screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
-	tar -czf $SERVERPATH/../backup/hei.tar.gz $SERVERPATH
-	screen -x $SCREENNAME -X stuff "`printf "save-on\r"`"
+	tar -cpvzf $SERVERPATH/../backup/$SERVERSCREEN-backup_.tar.gz $SERVERPATH
+	world1-11-01-2013-20h31m39s.tar.gz
+
+	screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
 
 }
 
@@ -155,15 +158,17 @@ notify()
 		;;
 
 		log)
-		echo lol
+		echo "[$HMS] $2">>fame.log
 		;;
 
 		console)
-		echo lol
+		#echo lol
 		;;
 
 		*)
-		echo lol
+		notify mc "$1"
+		notify log "$1"
+		notify console "$1"
 		;;
 #	screen -x $SCREENNAME -X stuff "`printf "say Startar oppbakking av verda\r"`"
 	esac
@@ -200,10 +205,16 @@ clear
 gfx splash # Display splash screen with logo
 gfx header
 fameprocess
-echo Detected world:
+echo -e ""$YELLOW"Server Description"
+Server Description           Screen                 Current status
+World 1                      mc-world1              Informing users
+													Exporting via           
 echo
 echo "SERVERDESC: $SERVERDESC"
 echo "SCREENNAME: $SERVERSCREEN"
 echo "SERVERPATH: $SERVERPATH"
+echo
+timeupdate
+echo "Backupstamp: $BKSTAMP"
 
-echo -e ""
+notify "Fame test @ $NOWSTAMP"
