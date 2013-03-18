@@ -15,26 +15,25 @@ PREVIOUSCOLUMNS=`tput cols`
 PREVIOUSLINES=`tput lines`
 # Pretty colors for the terminal:
 DEF="\x1b[0m"
-WHITE="\e[0;37m"
+#WHITE="\e[0;37m"
+WHITE="\x1b[37;01m"
 LIGHTBLACK="\x1b[30;01m"
-BLACK="\x1b[30;11m"
+BLACK="\x1b[0m\x1b[30;11m"
 LIGHTBLUE="\x1b[34;01m"
-BLUE="\x1b[34;11m"
+BLUE="\x1b[0m\x1b[34;11m"
 LIGHTCYAN="\x1b[36;01m"
-CYAN="\x1b[36;11m"
-LIGHTGRAY="\x1b[37;01m"
-GRAY="\x1b[37;11m"
+CYAN="\x1b[0m\x1b[36;11m"
+GRAY="\x1b[0m\x1b[37;11m"
 LIGHTGREEN="\x1b[32;01m"
-GREEN="\x1b[32;11m"
+GREEN="\x1b[0m\x1b[32;11m"
 LIGHTPURPLE="\x1b[35;01m"
-PURPLE="\x1b[35;11m"
+PURPLE="\x1b[0m\x1b[35;11m"
 LIGHTRED="\x1b[31;01m"
-RED="\x1b[31;11m"
+RED="\x1b[0m\x1b[31;11m"
 LIGHTYELLOW="\x1b[33;01m"
-YELLOW="\x1b[33;11m"
+YELLOW="\x1b[0m\x1b[33;11m"
 
-
-fametext=""$PURPLE"F"$YELLOW"."$PURPLE"A"$YELLOW"."$PURPLE"M"$YELLOW"."$PURPLE"E""$DEF"
+fametext=""$LIGHTYELLOW"F"$WHITE"."$LIGHTYELLOW"A"$WHITE"."$LIGHTYELLOW"M"$WHITE"."$LIGHTYELLOW"E""$DEF"
 
 gfx()
 {
@@ -49,18 +48,18 @@ gfx()
 			echo
 			echo
 			echo
-			echo -e ""$LIGHTPURPLE"                ::::::::::       :::           :::   :::       :::::::::    "
-			echo -e ""$PURPLE"               :+:            :+: :+:        :+:+: :+:+:      :+:           "
-			echo -e ""$PURPLE"              +:+           +:+   +:+      +:+ +:+:+ +:+     +:+            "
-			echo -e ""$PURPLE"             :#::+::#     +#++:++#++:     +#+  +:+  +#+     +#++:++#        "$DEF""
-			echo -e ""$PURPLE"            +#+          +#+     +#+     +#+       +#+     +#+              "
-			echo -e ""$PURPLE"           #+#          #+#     #+#     #+#       #+#     #+#               "
-			echo -e ""$PURPLE"          ###      "$YELLOW" * "$PURPLE" ###     ### "$YELLOW" * "$PURPLE" ###       ### "$YELLOW" * "$PURPLE" ##########         "
+			echo -e ""$LIGHTYELLOW"                ::::::::::       :::           :::   :::       :::::::::    "
+			echo -e ""$LIGHTYELLOW"               :+:            :+: :+:        :+:+: :+:+:      :+:           "
+			echo -e ""$LIGHTYELLOW"              +:+           +:+   +:+      +:+ +:+:+ +:+     +:+            "
+			echo -e ""$LIGHTYELLOW"             :#::+::#     +#++:++#++:     +#+  +:+  +#+     +#++:++#        "
+			echo -e ""$LIGHTYELLOW"            +#+          +#+     +#+     +#+       +#+     +#+              "
+			echo -e ""$LIGHTYELLOW"           #+#          #+#     #+#     #+#       #+#     #+#               "
+			echo -e ""$LIGHTYELLOW"          ###      "$WHITE" * "$LIGHTYELLOW" ###     ### "$WHITE" * "$LIGHTYELLOW" ###       ### "$WHITE" * "$LIGHTYELLOW" ##########         "
 			echo
-			echo -e ""$WHITE"                    Fine "$LIGHTBLACK"-"$WHITE" Automated "$LIGHTBLACK"-"$WHITE" Minecraft "$LIGHTBLACK"-"$WHITE" Exports"
+			echo -e ""$GRAY"                    Fine "$LIGHTBLACK"-"$GRAY" Automated "$LIGHTBLACK"-"$GRAY" Minecraft "$LIGHTBLACK"-"$GRAY" Exports"
 			echo
 			echo
-			echo -e "                          "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"$DEF""
+			echo -e "                          "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"
 			echo
 			echo
 			echo
@@ -71,14 +70,14 @@ gfx()
 		header)
 			clear
 			timeupdate
-			echo -e "$fametext"$WHITE" build $APPVERSION - $HMS" 
-			echo -e "0 Successful backups, 49 Warnings, 2 Errors"$DEF""
+			echo -e "$fametext"$GRAY" build $APPVERSION - $HMS" 
+			echo -e ""$LIGHTGREEN"0"$GRAY" Successful backups, "$LIGHTYELLOW"49"$GRAY" Warnings, "$LIGHTRED"2"$GRAY" Errors"
 			gfx line
 			echo
 			;;
 
 		line)
-			echo -e ""$DEF""$PURPLE"--------------------------------------------------------------------------------"$DEF""
+			echo -e ""$LIGHTBLACK""$"________________________________________________________________________________"$DEF""
 			;;
 
 		termreset)
@@ -205,16 +204,12 @@ clear
 gfx splash # Display splash screen with logo
 gfx header
 fameprocess
-echo -e ""$YELLOW"Server Description"
-Server Description           Screen                 Current status
-World 1                      mc-world1              Informing users
-													Exporting via           
+echo -e ""$LIGHTCYAN"SERVER DESCRIPTION          SCREEN                 CURRENT STATUS              I"
+#Server Description          Screen                 Current status              I
+#CSDN World T                mc-worldt              Informing users        
 echo
-echo "SERVERDESC: $SERVERDESC"
-echo "SCREENNAME: $SERVERSCREEN"
-echo "SERVERPATH: $SERVERPATH"
+echo -e ""$GRAY"$SERVERDESC                $SERVERSCREEN              Testing messaging service"
 echo
 timeupdate
 echo "Backupstamp: $BKSTAMP"
-
-notify "Fame test @ $NOWSTAMP"
+notify "Fametest @ $NOWSTAMP"
