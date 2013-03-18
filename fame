@@ -11,6 +11,8 @@
 APPVERSION="0.1"
 APPNAME="Fame"
 REDRAW="YES"
+TOPLINE="4"
+CURRENTLINE="$TOPLINE"
 PREVIOUSCOLUMNS=`tput cols`
 PREVIOUSLINES=`tput lines`
 # Pretty colors for the terminal:
@@ -33,10 +35,11 @@ RED="\x1b[0m\x1b[31;11m"
 LIGHTYELLOW="\x1b[33;01m"
 YELLOW="\x1b[0m\x1b[33;11m"
 
-fametext=""$LIGHTYELLOW"F"$WHITE"."$LIGHTYELLOW"A"$WHITE"."$LIGHTYELLOW"M"$WHITE"."$LIGHTYELLOW"E""$DEF"
+fametext=""$LIGHTCYAN"F"$WHITE"."$LIGHTCYAN"A"$WHITE"."$LIGHTCYAN"M"$WHITE"."$LIGHTCYAN"E""$DEF"
 
 gfx()
 {
+	timeupdate
 	case "$1" in
 		
 		splash)
@@ -48,37 +51,96 @@ gfx()
 			echo
 			echo
 			echo
-			echo -e ""$LIGHTYELLOW"                ::::::::::       :::           :::   :::       :::::::::    "
-			echo -e ""$LIGHTYELLOW"               :+:            :+: :+:        :+:+: :+:+:      :+:           "
-			echo -e ""$LIGHTYELLOW"              +:+           +:+   +:+      +:+ +:+:+ +:+     +:+            "
-			echo -e ""$LIGHTYELLOW"             :#::+::#     +#++:++#++:     +#+  +:+  +#+     +#++:++#        "
-			echo -e ""$LIGHTYELLOW"            +#+          +#+     +#+     +#+       +#+     +#+              "
-			echo -e ""$LIGHTYELLOW"           #+#          #+#     #+#     #+#       #+#     #+#               "
-			echo -e ""$LIGHTYELLOW"          ###      "$WHITE" * "$LIGHTYELLOW" ###     ### "$WHITE" * "$LIGHTYELLOW" ###       ### "$WHITE" * "$LIGHTYELLOW" ##########         "
+			echo -e ""$LIGHTCYAN"                ::::::::::       :::           :::   :::       :::::::::    "
+			echo -e ""$LIGHTCYAN"               :+:            :+: :+:        :+:+: :+:+:      :+:           "
+			echo -e ""$LIGHTCYAN"              +:+           +:+   +:+      +:+ +:+:+ +:+     +:+            "
+			echo -e ""$LIGHTCYAN"             :#::+::#     +#++:++#++:     +#+  +:+  +#+     +#++:++#        "
+			echo -e ""$LIGHTCYAN"            +#+          +#+     +#+     +#+       +#+     +#+              "
+			echo -e ""$CYAN"           #+#          #+#     #+#     #+#       #+#     #+#               "
+			echo -e ""$CYAN"          ###      "$WHITE" * "$CYAN" ###     ### "$WHITE" * "$CYAN" ###       ### "$WHITE" * "$CYAN" ##########         "
 			echo
 			echo -e ""$GRAY"                    Fine "$LIGHTBLACK"-"$GRAY" Automated "$LIGHTBLACK"-"$GRAY" Minecraft "$LIGHTBLACK"-"$GRAY" Exports"
 			echo
 			echo
-			echo -e "                          "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"
+			echo -e "                            "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"
 			echo
 			echo
 			echo
-			sleep 2
+			sleep 1
 			clear
-			;;
+		;;
 
 		header)
-			clear
-			timeupdate
-			echo -e "$fametext"$GRAY" build $APPVERSION - $HMS" 
-			echo -e ""$LIGHTGREEN"0"$GRAY" Successful backups, "$LIGHTYELLOW"49"$GRAY" Warnings, "$LIGHTRED"2"$GRAY" Errors"
-			gfx line
-			echo
-			;;
+			case "$2" in
+				top)
+					clear
+					echo -e "$fametext"$GRAY" build $APPVERSION"$RED"      _________________________________________________________" 
+				;;
+
+				middle)
+					echo -e ""$RED"______________________/    "$LIGHTGREEN"0"$GRAY" Successful backups,  "$LIGHTYELLOW"49"$GRAY" Warning(s),   "$LIGHTRED"2"$GRAY" Error(s)"
+				;;
+
+				bottom)
+					echo
+					echo -e ""$LIGHTCYAN"SERVER DESCRIPTION       SCREEN              CURRENT STATUS"$GRAY""
+				;;
+			esac
+
+		;;
 
 		line)
-			echo -e ""$LIGHTBLACK""$"________________________________________________________________________________"$DEF""
-			;;
+			echo -e ""$LIGHTBLACK"________________________________________________________________________________"$DEF""
+		;;
+		meshline)
+			echo -e ""$LIGHTBLACK"////////////////////////////////////////////////////////////////////////////////"$DEF""
+		;;
+		dotline)
+			echo -e ""$LIGHTBLACK"--------------------------------------------------------------------------------"$DEF""
+		;;
+
+		goto)
+			case "$2" in
+				column)
+					case "$3" in
+						1)
+						X=0
+						;;
+
+						2)
+						X=24
+						;;
+
+						3)
+						X=44
+						;;
+					esac
+					tput cup $CURRENTLINE $X
+					if [ "$3" != "1" ] ; then echo -e -n " "; fi
+				;;
+			esac
+		;;
+
+		write)
+			case "$2" in
+				column)
+					gfx goto column $3
+					case "$3" in
+						1)
+							echo $SERVERDESC
+						;;
+
+						2)
+							echo $SERVERSCREEN
+						;;
+
+						3)
+							echo -e ""$LIGHTGREEN">"$GRAY" $4"
+						;;
+					esac
+				;;
+			esac
+		;;
 
 		termreset)
 			echo Terminal size changed, resetting...
@@ -87,7 +149,7 @@ gfx()
 			REDRAW=YES
 			reset
 			gfx header
-			;;
+		;;
 	esac
 
 
@@ -105,6 +167,7 @@ timeupdate() # Sets current time into different variables. Used for timestamping
 	MINUTE=$(date +"%M")
 	SEC=$(date +"%S")
 }
+
 
 
 
@@ -130,8 +193,7 @@ fameprocess()
 backup()
 {
 	screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
-	tar -cpvzf $SERVERPATH/../backup/$SERVERSCREEN-backup_.tar.gz $SERVERPATH
-	world1-11-01-2013-20h31m39s.tar.gz
+	echo -e "tar -cpvzf $SERVERPATH/../backup/$BKSTAMP $SERVERPATH"
 
 	screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
 
@@ -202,14 +264,17 @@ cleanup()
 
 clear
 gfx splash # Display splash screen with logo
-gfx header
+gfx header top
+gfx header middle
+gfx header bottom
 fameprocess
-echo -e ""$LIGHTCYAN"SERVER DESCRIPTION          SCREEN                 CURRENT STATUS              I"
-#Server Description          Screen                 Current status              I
-#CSDN World T                mc-worldt              Informing users        
-echo
-echo -e ""$GRAY"$SERVERDESC                $SERVERSCREEN              Testing messaging service"
-echo
-timeupdate
-echo "Backupstamp: $BKSTAMP"
-notify "Fametest @ $NOWSTAMP"
+
+#cho -e "Server Description       Screen              Current status
+#echo -e "CSDN World T             mc-worldt           "$LIGHTGREEN"> "$WHITE"Exporting to remote location..."$DEF""
+gfx write column 1
+gfx write column 2
+gfx write column 3 "Creating tar.gz archive.."
+#echo -e "CSDN Tekkit II           mc-tekkit2          Last backup @ 18.Mar - 22:01:52"
+#timeupdate
+#echo -e ""$DEF"Backupstamp: $BKSTAMP"
+#notify "Fametest @ $NOWSTAMP"
