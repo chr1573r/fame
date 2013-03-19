@@ -78,7 +78,7 @@ gfx()
 				;;
 
 				middle)
-					echo -e ""$RED"______________________/    "$LIGHTGREEN"0"$GRAY" Successful backups,  "$LIGHTYELLOW"49"$GRAY" Warning(s),   "$LIGHTRED"2"$GRAY" Error(s)"
+					echo -e ""$RED"______________________/"$LIGHTBLACK" "$GREEN"9K+"$LIGHTBLACK" Successful backup(s), "$YELLOW"9K+"$LIGHTBLACK" Warning(s), "$RED"9K+"$LIGHTBLACK" Error(s)."
 				;;
 
 				bottom)
