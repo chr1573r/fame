@@ -91,6 +91,27 @@ gfx()
 					reset
 				;;
 
+				sticky)
+					case "$3" in
+						on)
+							STICKY=YES
+						;;
+
+						off)
+							STICKY=NO
+						;;
+
+						save)
+							tput sc
+						;;
+
+						goto)
+							tput rc
+						;;
+
+					esac
+				;;
+
 				*)
 				;;
 			esac
@@ -176,6 +197,7 @@ gfx()
 			case "$2" in
 				column)
 					gfx core goto column $3
+					if [ "$STICKY" == "YES" ] ; then gfx core sticky save; fi
 					case "$3" in
 						1)
 							echo $SERVERDESC
@@ -186,9 +208,11 @@ gfx()
 						;;
 
 						3)
+							tput el
 							echo -e ""$LIGHTGREEN">"$GRAY" $4"
 						;;
 					esac
+					if [ "$STICKY" == "YES" ] ; then gfx core sticky goto; fi
 				;;
 			esac
 		;;
@@ -205,7 +229,8 @@ gfx()
 
 timeupdate() # Sets current time into different variables. Used for timestamping etc.
 {
-	DATE=$(date +"%d-%m-%Y")
+	DATE=$(date +"%d-%m-%Y") #nor
+	MCDATE=$(date +"%Y-%m-%d") #mc server log format
 	UNIXSTAMP=$(date +%s)
 	BKSTAMP=""$SERVERSCREEN"_backup_$(date +"%m-%d-%Y")_$(date +"%Hh%Mm%Ss")_fbck.tar.gz"
 	NOWSTAMP=$(date +"%Hh%Mm%Ss")
@@ -237,49 +262,48 @@ fameprocess()
 }
 
 
-
-backup()
+fm() #Main fame framework, combines other functions in powerful subfunctions
 {
-	screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
-	echo -e "tar -cpvzf $SERVERPATH/../backup/$BKSTAMP $SERVERPATH"
-
-	screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
-
-}
-
-#mc()
-#{
-#	case "$1" in
-#	save-on)
-#		echo lol
-#		;;
-#
-#		save-off)
-#		echo lol
-#		;;
-#}
-
-notify()
-{
+	timeupdate
+#	echo DEBEWG:1:$1 2:$2 3:$3
 	case "$1" in
-		mc)
-		screen -x $SERVERSCREEN -X stuff "`printf "say $2\r"`"
-		;;
+		notify)
+			case "$2" in
+				mc)
+				screen -x $SERVERSCREEN -X stuff "`printf "say $3\r"`"
+				;;
 
-		log)
-		echo "[$HMS] $2">>fame.log
-		;;
+				log)
+				echo "$MCDATE $HMS [INFO] $3">>famelog.txt
+				;;
 
-		console)
-		#echo lol
-		;;
+				cs) # Changes current status on the active server
+				gfx core sticky save
+				gfx write column 3 "$3"
+				gfx core sticky goto
+				;;
 
-		*)
-		notify mc "$1"
-		notify log "$1"
-		notify console "$1"
-		;;
-#	screen -x $SCREENNAME -X stuff "`printf "say Startar oppbakking av verda\r"`"
+				*)
+				fm notify mc "$2"
+				fm notify log "$2"
+				fm notify cs "$2"
+				;;
+		#	screen -x $SCREENNAME -X stuff "`printf "say Startar oppbakking av verda\r"`"
+			esac
+			;;
+		backup)
+				fm notify "Disabling world saving..."
+				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
+				sleep 1
+				fm notify cs "\e[5;37;01m Creating compressed backup ..\e[m\n"
+				#printf ''
+				tar -cpvzf $SERVERPATH/../backup/$BKSTAMP $SERVERPATH >> fametar.log
+				sleep 1
+				fm notify "Enabling world saving..."
+				screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
+				fm notify "Backup complete!"
+
+
 	esac
 }
 
@@ -321,10 +345,12 @@ fameprocess
 #echo -e "CSDN World T             mc-worldt           "$LIGHTGREEN"> "$WHITE"Exporting to remote location..."$DEF""
 gfx write column 1
 gfx write column 2
-gfx write column 3 "Creating tar.gz archive.."
-sleep 1
-gfx core goto ${POS_HEADERMIDTEXTFIELD[0]} ${POS_HEADERMIDTEXTFIELD[1]}
-echo Her skriver jeg over info!
+
+fm notify "Initializing backup.."
+fm backup
+fm notify "Initializing cleanup.."
+
+# gfx core goto ${POS_HEADERMIDTEXTFIELD[0]} ${POS_HEADERMIDTEXTFIELD[1]}
 #echo -e "CSDN Tekkit II           mc-tekkit2          Last backup @ 18.Mar - 22:01:52"
 #timeupdate
 #echo -e ""$DEF"Backupstamp: $BKSTAMP"
