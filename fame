@@ -10,11 +10,9 @@
 # Variables: General
 APPVERSION="0.1"
 APPNAME="Fame"
-REDRAW="YES"
-TOPLINE="4"
-CURRENTLINE="$TOPLINE"
-PREVIOUSCOLUMNS=`tput cols`
-PREVIOUSLINES=`tput lines`
+MSG_OK=0
+MSG_WARN=0
+MSG_ERROR=0
 
 # Variables: Gfx framework
 ## Colors
@@ -36,6 +34,14 @@ LIGHTRED="\x1b[31;01m"
 RED="\x1b[0m\x1b[31;11m"
 LIGHTYELLOW="\x1b[33;01m"
 YELLOW="\x1b[0m\x1b[33;11m"
+
+
+## Gfx core
+REDRAW="YES"
+TOPLINE="4"
+CURRENTLINE="$TOPLINE"
+PREVIOUSCOLUMNS=`tput cols`
+PREVIOUSLINES=`tput lines`
 
 ## Locations (Arrays containing X&Y coords)
 POS_HEADERTOPLINE=(22 0)
@@ -146,7 +152,7 @@ gfx()
 					echo
 					echo
 					echo
-					sleep 1
+					sleep 2
 					clear
 				;;
 
@@ -159,7 +165,12 @@ gfx()
 						;;
 
 						middle)
-							echo -e ""$RED"______________________/"$GRAY" "$GREEN"9K+"$GRAY" Successful backup(s), "$YELLOW"9K+"$GRAY" Warning(s), "$RED"9K+"$GRAY" Error(s)."
+							echo -e ""$RED"______________________/"$GRAY" "$GREEN"  $MSG_OK"$GRAY" Successful backup(s), "$YELLOW"  $MSG_WARN"$GRAY" Warning(s), "$RED"  $MSG_ERROR"$GRAY" Error(s)."
+						;;
+
+						update)
+							gfx core goto ${POS_HEADERMIDTEXTFIELD[0]} ${POS_HEADERMIDTEXTFIELD[1]}
+							echo -e -n ""$GREEN"  $MSG_OK"$GRAY" Successful backup(s), "$YELLOW"  $MSG_WARN"$GRAY" Warning(s), "$RED"  $MSG_ERROR"$GRAY" Error(s)."
 						;;
 
 						bottom)
@@ -200,10 +211,12 @@ gfx()
 					if [ "$STICKY" == "YES" ] ; then gfx core sticky save; fi
 					case "$3" in
 						1)
+							tput el
 							echo $SERVERDESC
 						;;
 
 						2)
+							tput el
 							echo $SERVERSCREEN
 						;;
 
@@ -263,9 +276,17 @@ fameprocess()
 
 				fm notify "Initializing backup.."
 				fm backup
-				fm notify "Initializing cleanup.."
+				fm notify cs "Initializing export.."
+				fm upload
+				fm notify cs "Completed @ $HMS"
+				CURRENTLINE=$(( CURRENTLINE + 1))
+				MSG_OK=$(( MSG_OK + 1))
+				gfx draw header update
+
 			
 			done < world.lst
+			gfx core goto 0 $CURRENTLINE
+			echo $CURRENTLINE
 }
 
 
@@ -298,30 +319,34 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 		#	screen -x $SCREENNAME -X stuff "`printf "say Startar oppbakking av verda\r"`"
 			esac
 			;;
+
 		backup)
-				fm notify "Disabling world saving..."
+				CURRENTARCHIVE=$SERVERPATH/../backup/$BKSTAMP
+				fm notify "Disabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
 				sleep 1
-				fm notify cs "\e[5;37;01mCreating compressed backup ..\e[m\n"
-				#printf ''
-				tar -cpvzf $SERVERPATH/../backup/$BKSTAMP $SERVERPATH &> fametar.log
+				fm notify cs "\e[5;37;01mCreating compressed backup..\e[m\n"
+				tar -cpvzf $CURRENTARCHIVE $SERVERPATH &> fametar.log
 				sleep 1
-				fm notify "Enabling world saving..."
+				fm notify "Enabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
 				fm notify "Backup complete!"
+			;;
 
+		upload)
+				SCPSERVER=mayuri
+				SCPUSER=christer
+				SCPPATH=/home/christer/fametest
+				SCPPORT=22
+				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n" 
+				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/ &> famescp.log
+			;;
 
 	esac
 }
 
 
 exporting()
-{
-	echo lol
-}
-
-
-upload()
 {
 	echo lol
 }
