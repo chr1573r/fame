@@ -245,7 +245,6 @@ timeupdate() # Sets current time into different variables. Used for timestamping
 	DATE=$(date +"%d-%m-%Y") #nor
 	MCDATE=$(date +"%Y-%m-%d") #mc server log format
 	UNIXSTAMP=$(date +%s)
-	BKSTAMP=""$SERVERSCREEN"_backup_$(date +"%m-%d-%Y")_$(date +"%H%M_%S")_fbck.tar.gz"
 	NOWSTAMP=$(date +"%Hh%Mm%Ss")
 	HM=$(date +"%R")
 	HMS=$(date +"%R:%S")
@@ -266,10 +265,21 @@ startup()
 fameprocess()
 {
 			while read HOSTENTRY ; do
+				timeupdate
 
 				SERVERDESC=`echo $HOSTENTRY | awk -F":" '{print $1}' $2`
 				SERVERSCREEN=`echo $HOSTENTRY | awk -F":" '{print $2}' $2`
 				SERVERPATH=`echo $HOSTENTRY | awk -F":" '{print $3}' $2`
+
+				BACKUPPATH="/home/christer/famebackups/$SERVERSCREEN"
+				BKSTAMP=""$SERVERSCREEN"_backup_$(date +"%m-%d-%Y")_$(date +"%H%M_%S")_fbck.tar.gz"
+				CURRENTARCHIVE="$BACKUPPATH/$BKSTAMP"
+				ERASEOLDERTHAN="20"
+
+				SCPSERVER="mayuri"
+				SCPUSER="christer"
+				SCPPATH="/home/christer/fametest"
+				SCPPORT="22"
 
 				gfx write column 1
 				gfx write column 2
@@ -278,6 +288,8 @@ fameprocess()
 				fm backup
 				fm notify cs "Initializing export.."
 				fm upload
+				fm notify cs "Erasing files (age $ERASEOLDERTHAN mins)"
+				fm cleanup
 				fm notify cs "Completed @ $HMS"
 				CURRENTLINE=$(( CURRENTLINE + 1))
 				MSG_OK=$(( MSG_OK + 1))
@@ -286,7 +298,6 @@ fameprocess()
 			
 			done < world.lst
 			gfx core goto 0 $CURRENTLINE
-			echo $CURRENTLINE
 }
 
 
@@ -302,7 +313,8 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				;;
 
 				log)
-				echo "$MCDATE $HMS [INFO] $3">>famelog.txt
+				echo "$MCDATE $HMS [INFO] $3">>famesys.log
+				echo "$MCDATE $HMS [INFO] $3">>famedebug.log
 				;;
 
 				cs) # Changes current status on the active server
@@ -321,12 +333,13 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 			;;
 
 		backup)
-				CURRENTARCHIVE=$SERVERPATH/../backup/$BKSTAMP
+
 				fm notify "Disabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
 				sleep 1
 				fm notify cs "\e[5;37;01mCreating compressed backup..\e[m\n"
-				tar -cpvzf $CURRENTARCHIVE $SERVERPATH &> fametar.log
+#				tar -cpvzf $CURRENTARCHIVE $SERVERPATH >> fametar.log
+				tar -cpvzf $CURRENTARCHIVE -C / $SERVERPATH >> famedebug.log 2>&1
 				sleep 1
 				fm notify "Enabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
@@ -334,35 +347,21 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 			;;
 
 		upload)
-				SCPSERVER=mayuri
-				SCPUSER=christer
-				SCPPATH=/home/christer/fametest
-				SCPPORT=22
+
 				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n" 
-				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/ &> famescp.log
+				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/ >> famedebug.log 2>&1
+			;;
+		cleanup)
+				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN >> famedebug.log 2>&1 # Output files that will be erased
+				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN -delete >> famedebug.log 2>&1
+				sleep 3
+
+
+
 			;;
 
 	esac
 }
-
-
-exporting()
-{
-	echo lol
-}
-
-
-archive()
-{
-	echo lol
-}
-
-
-cleanup()
-{
-	echo lol
-}
-
 
 #actual runscript
 
