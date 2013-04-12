@@ -7,6 +7,20 @@
 # Check README for instructions
 
 
+#TODO
+# File validation - famecfgs and backups
+# Plugin support
+# Handle non existant directories tar/scp
+# Advanced date/cleanup options
+# Support custom tar/scp switches?
+# Make fame ignore invalid lines in cfgs
+# Handle unset variables
+# Decent logging and error reporting
+# Detect UTF8/terminal?
+# Cron mode and contious mode
+# Cleanup code and comment
+
+
 # Variables: General
 APPVERSION="0.1"
 APPNAME="Fame"
@@ -242,15 +256,17 @@ gfx()
 
 timeupdate() # Sets current time into different variables. Used for timestamping etc.
 {
-	DATE=$(date +"%d-%m-%Y") #nor
-	MCDATE=$(date +"%Y-%m-%d") #mc server log format
-	UNIXSTAMP=$(date +%s)
-	NOWSTAMP=$(date +"%Hh%Mm%Ss")
-	HM=$(date +"%R")
-	HMS=$(date +"%R:%S")
-	HOUR=$(date +"%H")
-	MINUTE=$(date +"%M")
-	SEC=$(date +"%S")
+	DATE=$(date +"%d-%m-%Y") 			# 12-04-2013 (day-month-year)
+	SHORTDATE=$(date +"%d-%m-%y")		# 12-04-13
+	DATEFUZZY=$(date +"%a %d %b")		# Fri 12 Apr
+	MCDATE=$(date +"%Y-%m-%d")			# 2013-04-12 15:34:13 (mc server log format)
+	UNIXSTAMP=$(date +%s)				# 1365773648 (unix timestamp)
+	NOWSTAMP=$(date +"%Hh%Mm%Ss") 		# 15h34m34s
+	HM=$(date +"%R") 					# 15:34
+	HMS=$(date +"%R:%S") 				# 15:34:34
+	HOUR=$(date +"%H") 					# 15
+	MINUTE=$(date +"%M") 				# 34
+	SEC=$(date +"%S") 					# 56
 }
 
 
@@ -265,14 +281,14 @@ startup()
 fameprocess()
 {
 			while read HOSTENTRY ; do
-				timeupdate
-
+				fm
 				SERVERDESC=`echo $HOSTENTRY | awk -F":" '{print $1}' $2`
 				SERVERSCREEN=`echo $HOSTENTRY | awk -F":" '{print $2}' $2`
 				SERVERPATH=`echo $HOSTENTRY | awk -F":" '{print $3}' $2`
 
 				BACKUPPATH="/home/christer/famebackups/$SERVERSCREEN"
-				BKSTAMP=""$SERVERSCREEN"_backup_$(date +"%m-%d-%Y")_$(date +"%H%M_%S")_fbck.tar.gz"
+				BKSTAMP=""$SERVERSCREEN"_$(date +"%m-%d-%Y")_$(date +"%H%M")_fbck.tar.gz"
+				LATESTSTAMP=""$SERVERSCREEN"_latest_fbck.tar.gz"
 				CURRENTARCHIVE="$BACKUPPATH/$BKSTAMP"
 				ERASEOLDERTHAN="20"
 
@@ -290,7 +306,7 @@ fameprocess()
 				fm upload
 				fm notify cs "Erasing files (age $ERASEOLDERTHAN mins)"
 				fm cleanup
-				fm notify cs "Completed @ $HMS"
+				fm notify cs "Completed @ $HMS, $DATEFUZZY"
 				CURRENTLINE=$(( CURRENTLINE + 1))
 				MSG_OK=$(( MSG_OK + 1))
 				gfx draw header update
@@ -313,8 +329,8 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				;;
 
 				log)
-				echo "$MCDATE $HMS [INFO] $3">>famesys.log
-				echo "$MCDATE $HMS [INFO] $3">>famedebug.log
+				echo "$MCDATE $HMS [INFO][$SERVERSCREEN] $3">>famesys.log
+				echo "$MCDATE $HMS [INFO][$SERVERSCREEN] $3">>famedebug.log
 				;;
 
 				cs) # Changes current status on the active server
@@ -328,7 +344,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				fm notify log "$2"
 				fm notify cs "$2"
 				;;
-		#	screen -x $SCREENNAME -X stuff "`printf "say Startar oppbakking av verda\r"`"
+
 			esac
 			;;
 
@@ -348,11 +364,12 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 
 		upload)
 
-				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n" 
-				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/ >> famedebug.log 2>&1
+				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n"
+				echo "scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP" >> famedebug.log
+				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP >> famedebug.log 2>&1
 			;;
 		cleanup)
-				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN >> famedebug.log 2>&1 # Output files that will be erased
+				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN | echo >> famedebug.log 2>&1 # Output files that will be erased
 				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN -delete >> famedebug.log 2>&1
 				sleep 3
 
