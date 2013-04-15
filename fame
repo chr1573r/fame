@@ -64,13 +64,18 @@ POS_HEADERBOTTOM=(0 4)
 POS_COLUMN1=(0 $CURRENTLINE)
 POS_COLUMN2=(24 $CURRENTLINE)
 POS_COLUMN3=(44 $CURRENTLINE)
-
+POS_CONSOLETOPLINE=(0 18)
+POS_CONSOLETEXTFIELD=(0 19)
+POS_CONSOLEBOTTOM=(0 79)
+POS_CONSOLEBOTTOMTEXTFIELD1=(4 79)
+POS_CONSOLEBOTTOMTEXTFIELD2=(54 79)
 
 
 fametext=""$LIGHTCYAN"F"$WHITE"."$LIGHTCYAN"A"$WHITE"."$LIGHTCYAN"M"$WHITE"."$LIGHTCYAN"E""$DEF"
 
 gfx()
 {
+	timeupdate
 	case "$1" in
 		
 		core)
@@ -94,8 +99,38 @@ gfx()
 							tput cup $CURRENTLINE $X
 							if [ "$4" != "1" ] ; then echo -e -n " "; fi
 						;;
+						console)
+							case "$4" in
+								top)
+								X=${POS_CONSOLETOPLINE[0]}
+								Y=${POS_CONSOLETOPLINE[1]}
+								;;
+
+								textfield)
+								X=${POS_CONSOLETEXTFIELD[0]}
+								Y=${POS_CONSOLETEXTFIELD[1]}
+								;;
+
+								bottom)
+								X=${POS_CONSOLEBOTTOM[0]}
+								Y=${POS_CONSOLEBOTTOM[1]}
+								;;
 
 
+								bottomtextfield1)
+								X=${POS_CONSOLEBOTTOMTEXTFIELD1[0]}
+								Y=${POS_CONSOLEBOTTOMTEXTFIELD1[1]}
+								;;
+
+
+								bottomtextfield2)
+								X=${POS_CONSOLEBOTTOMTEXTFIELD2[0]}
+								Y=${POS_CONSOLEBOTTOMTEXTFIELD2[1]}
+								;;
+								
+							esac
+							tput cup $Y $X
+						;;
 						*)
 							#tput cup Y X
 							tput cup $4 $3
@@ -203,11 +238,19 @@ gfx()
 						;;
 
 						slash)
-							echo -e ""$LIGHTBLACK"////////////////////////////////////////////////////////////////////////////////"$DEF""
+							echo -e ""$RED"////////////////////////////////////////////////////////////////////////////////"$DEF""
 						;;
 
 						hyphen)
 							echo -e ""$LIGHTBLACK"--------------------------------------------------------------------------------"$DEF""
+						;;
+
+						consoletop)
+							echo -e ""$LIGHTBLACK"------------------------ "$RED"- "$GRAY"F.A.M.E Log viewer console "$RED"- "$LIGHTBLACK"------------------------"$DEF""
+						;;
+
+						consolebottom)
+							echo -n -e ""$LIGHTBLACK"--------------------------------------------------------------------------------"$DEF""
 						;;
 
 					esac
@@ -241,6 +284,21 @@ gfx()
 					esac
 					if [ "$STICKY" == "YES" ] ; then gfx core sticky goto; fi
 				;;
+
+				console)
+					case "$3" in
+						load)
+						gfx core goto console bottomtextfield1
+						echo -e -n " "$GRAY"Load:`uptime | awk -F'load average:' '{ print $2 }'` "
+						;;
+
+						time)
+						gfx core goto console bottomtextfield2
+						echo -e -n " "$GRAY"$HMS, $DATEFUZZY"$DEF" "
+						;;
+					esac
+				;;
+					
 			esac
 		;;
 
@@ -259,7 +317,7 @@ timeupdate() # Sets current time into different variables. Used for timestamping
 	DATE=$(date +"%d-%m-%Y") 			# 12-04-2013 (day-month-year)
 	SHORTDATE=$(date +"%d-%m-%y")		# 12-04-13
 	DATEFUZZY=$(date +"%a %d %b")		# Fri 12 Apr
-	MCDATE=$(date +"%Y-%m-%d")			# 2013-04-12 15:34:13 (mc server log format)
+	MCSTAMP=$(date +"%Y-%m-%d %R:%S")	# 2013-04-12 15:34:13 (mc server log format)
 	UNIXSTAMP=$(date +%s)				# 1365773648 (unix timestamp)
 	NOWSTAMP=$(date +"%Hh%Mm%Ss") 		# 15h34m34s
 	HM=$(date +"%R") 					# 15:34
@@ -282,6 +340,7 @@ fameprocess()
 {
 			while read HOSTENTRY ; do
 				fm
+				gfx write console load
 				SERVERDESC=`echo $HOSTENTRY | awk -F":" '{print $1}' $2`
 				SERVERSCREEN=`echo $HOSTENTRY | awk -F":" '{print $2}' $2`
 				SERVERPATH=`echo $HOSTENTRY | awk -F":" '{print $3}' $2`
@@ -329,8 +388,9 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				;;
 
 				log)
-				echo "$MCDATE $HMS [INFO][$SERVERSCREEN] $3">>famesys.log
-				echo "$MCDATE $HMS [INFO][$SERVERSCREEN] $3">>famedebug.log
+				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famesys.log
+				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famedebug.log
+				fm console refresh
 				;;
 
 				cs) # Changes current status on the active server
@@ -346,7 +406,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				;;
 
 			esac
-			;;
+		;;
 
 		backup)
 
@@ -360,21 +420,43 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				fm notify "Enabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
 				fm notify "Backup complete!"
-			;;
+		;;
 
 		upload)
 
 				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n"
 				echo "scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP" >> famedebug.log
 				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP >> famedebug.log 2>&1
-			;;
+		;;
+
 		cleanup)
 				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN | echo >> famedebug.log 2>&1 # Output files that will be erased
 				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN -delete >> famedebug.log 2>&1
 				sleep 3
+		;;
 
+		console)
+			gfx core sticky save
+			case "$2" in
+				init)
+					gfx core goto console top
+					gfx draw line consoletop
+					gfx core goto console bottom
+					gfx draw line consolebottom
+				;;
 
+				refresh)
+					local IFS=$'\n'
+					gfx core goto console textfield
+						for outputline in $( tail -n 4 famesys.log ); do
+						tput el
+						echo -e "$LIGHTBLACK""$outputline""$DEF"
+					done
+					gfx write console time
+				;;
 
+			esac
+			gfx core sticky goto
 			;;
 
 	esac
@@ -387,7 +469,9 @@ gfx draw splash # Display splash screen with logo
 gfx draw header top
 gfx draw header middle
 gfx draw header bottom
+fm console init
 fameprocess
+
 
 #cho -e "Server Description       Screen              Current status
 #echo -e "CSDN World T             mc-worldt           "$LIGHTGREEN"> "$WHITE"Exporting to remote location..."$DEF""
