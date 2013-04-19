@@ -359,13 +359,12 @@ fameprocess()
 				gfx write column 1
 				gfx write column 2
 
-				fm notify "Initializing backup.."
 				fm backup
-				fm notify cs "Initializing export.."
 				fm upload
-				fm notify cs "Erasing files (age $ERASEOLDERTHAN mins)"
 				fm cleanup
+				
 				fm notify cs "Completed @ $HMS, $DATEFUZZY"
+
 				CURRENTLINE=$(( CURRENTLINE + 1))
 				MSG_OK=$(( MSG_OK + 1))
 				gfx draw header update
@@ -409,7 +408,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 		;;
 
 		backup)
-
+				fm notify "Initializing backup.."
 				fm notify "Disabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
 				sleep 1
@@ -423,13 +422,14 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 		;;
 
 		upload)
-
+				fm notify cs "Initializing export.."
 				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n"
 				echo "scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP" >> famedebug.log
 				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP >> famedebug.log 2>&1
 		;;
 
 		cleanup)
+				fm notify cs "Erasing files (age $ERASEOLDERTHAN mins)"
 				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN | echo >> famedebug.log 2>&1 # Output files that will be erased
 				find $BACKUPPATH/*_fbck.tar.gz -type f -mmin +$ERASEOLDERTHAN -delete >> famedebug.log 2>&1
 				sleep 3
