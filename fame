@@ -24,6 +24,7 @@
 # Variables: General
 APPVERSION="0.1"
 APPNAME="Fame"
+VALIDATED=NO
 MSG_OK=0
 MSG_WARN=0
 MSG_ERROR=0
@@ -58,7 +59,7 @@ PREVIOUSCOLUMNS=`tput cols`
 PREVIOUSLINES=`tput lines`
 
 ## Locations (Arrays containing X&Y coords)
-POS_SPLASHSTATUSFIELD=(0 22)
+POS_SPLASHSTATUSFIELD=(0 21)
 POS_HEADERTOPLINE=(22 0)
 POS_HEADERMIDTEXTFIELD=(24 1)
 POS_HEADERBOTTOM=(0 4)
@@ -186,7 +187,7 @@ gfx()
 			case "$2" in
 				splash)
 					clear
-					echo TOPP
+					echo
 					echo
 					echo
 					echo          
@@ -300,11 +301,14 @@ gfx()
 					esac
 				;;
 		
-				splashstatus)
+				splashstatus) #does not support ascii color codes
+					echo -e -n ""$DEF""
 					gfx core goto splashstatusfield
 					tput el
-					echo -e -n "$4"
+					printf "%*s\n" $(((${#3}+$CURRENTCOLUMNS)/2)) "$3"
+					PREVIOUS_SPLASHSTATUS="$3"
 				;;
+					
 
 			esac
 		;;
@@ -332,14 +336,6 @@ timeupdate() # Sets current time into different variables. Used for timestamping
 	HOUR=$(date +"%H") 					# 15
 	MINUTE=$(date +"%M") 				# 34
 	SEC=$(date +"%S") 					# 56
-}
-
-
-
-
-startup()
-{
-	echo lol
 }
 
 
@@ -389,11 +385,17 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 	case "$1" in
 
 		validate)
-			gfx write splashstatus
-			if [ -f settings.cfg ] ; then source settings.cfg; else gfx write splashstatus ""$YELLOW"Warning! Configuration file missing!"; fi
-			echo LANDET HER!
-			sleep 10
-			if [ -z "$REFRESHRATE" ]; then echo -e ""$YELLOW"WATCHDOG Warning: "$GRAY"REFRESHRATE not set, changing REFRESHRATE to 5 seconds."$DEF""; REFRESHRATE=5; sleep 2; fi
+			if [ -z "$YOLOBRO" ]; then gfx write splashstatus "YOLOBRO not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			if [ -z "$BACKUPPATH" ]; then gfx write splashstatus "BACKUPPATH not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			if [ -z "$ERASEOLDERTHAN" ]; then gfx write splashstatus "not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			if [ -z "$SCPSERVER" ]; then gfx write splashstatus "SCPSERVER not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			if [ -z "$SCPUSER" ]; then gfx write splashstatus "SCPUSER not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			if [ -z "$SCPPATH" ]; then gfx write splashstatus "SCPPATH not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			if [ -z "$SCPPORT" ]; then gfx write splashstatus "SCPPORT not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			VALIDATED=OK
+
+			#if [ -f settings.cfg ] ; then source settings.cfg; else gfx write splashstatus ""$YELLOW"Warning! Configuration file missing!"; fi
+			#if [ -z "$REFRESHRATE" ]; then echo -e ""$YELLOW"WATCHDOG Warning: "$GRAY"REFRESHRATE not set, changing REFRESHRATE to 5 seconds."$DEF""; REFRESHRATE=5; sleep 2; fi
 
 		;;
 
@@ -401,24 +403,19 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 		notify)
 			case "$2" in
 				mc)
+				fm log info "Sent msg to chat "$3""
 				screen -x $SERVERSCREEN -X stuff "`printf "say $3\r"`"
-				;;
-
-				log)
-				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famesys.log
-				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famedebug.log
-				fm console refresh
 				;;
 
 				cs) # Changes current status on the active server
 				gfx core sticky save
+				fm log info "$3"
 				gfx write column 3 "$3"
 				gfx core sticky goto
 				;;
 
 				*)
 				fm notify mc "$2"
-				fm notify log "$2"
 				fm notify cs "$2"
 				;;
 
@@ -430,8 +427,8 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				fm notify "Disabling world saving.."
 				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
 				sleep 1
-				fm notify cs "\e[5;37;01mCreating compressed backup..\e[m\n"
-#				tar -cpvzf $CURRENTARCHIVE $SERVERPATH >> fametar.log
+				fm notify cs "Creating compressed backup.."
+				#fm notify cs "\e[5;37;01mCreating compressed backup..\e[m\n"
 				tar -cpvzf $CURRENTARCHIVE -C / $SERVERPATH >> famedebug.log 2>&1
 				sleep 1
 				fm notify "Enabling world saving.."
@@ -441,7 +438,8 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 
 		upload)
 				fm notify cs "Initializing export.."
-				fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n"
+				fm notify cs "Uploading to $SCPSERVER"
+				#fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n"
 				echo "scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP" >> famedebug.log
 				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP >> famedebug.log 2>&1
 		;;
@@ -464,7 +462,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				;;
 
 				refresh)
-					local IFS=$'\n'
+					local IFS=$'\n' #make sure that only new lines count in the "for" command below
 					gfx core goto console textfield
 						for outputline in $( tail -n 4 famesys.log ); do
 						tput el
@@ -477,6 +475,35 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 			gfx core sticky goto
 		;;
 
+		log)
+			case "$2" in
+				info)
+				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famesys.log
+				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famedebug.log
+				;;
+
+				ok)
+				MSG_OK=$(( MSG_OK + 1))
+				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famesys.log
+				echo "$MCSTAMP [INFO][$SERVERSCREEN] $3">>famedebug.log
+				;;
+
+				warn)
+				echo "$MCSTAMP [WARN][$SERVERSCREEN] $3">>famesys.log
+				echo "$MCSTAMP [WARN][$SERVERSCREEN] $3">>famedebug.log
+				MSG_WARN=$(( MSG_WARN + 1))
+				;;
+
+				error)
+				echo "$MCSTAMP [ERROR][$SERVERSCREEN] $3">>famesys.log
+				echo "$MCSTAMP [ERROR][$SERVERSCREEN] $3">>famedebug.log
+				MSG_ERROR=$(( MSG_ERROR + 1))
+				;;
+
+			esac
+			if [ "$VALIDATED" == "OK" ]; then fm console refresh; fi
+		;;
+
 	esac
 }
 
@@ -484,6 +511,14 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 
 clear
 gfx draw splash # Display splash screen with logo
+CURRENTCOLUMNS=`tput cols`
+CURRENTLINES=`tput lines`
+if [ "$PREVIOUSCOLUMNS" != "$CURRENTCOLUMNS" ]; then
+	termreset
+
+elif [ "$PREVIOUSLINES" != "$CURRENTLINES" ]; then
+	termreset
+fi
 fm validate
 gfx draw header top
 gfx draw header middle
@@ -491,13 +526,3 @@ gfx draw header bottom
 fm console init
 fameprocess
 
-
-#cho -e "Server Description       Screen              Current status
-#echo -e "CSDN World T             mc-worldt           "$LIGHTGREEN"> "$WHITE"Exporting to remote location..."$DEF""
-
-
-# gfx core goto ${POS_HEADERMIDTEXTFIELD[0]} ${POS_HEADERMIDTEXTFIELD[1]}
-#echo -e "CSDN Tekkit II           mc-tekkit2          Last backup @ 18.Mar - 22:01:52"
-#timeupdate
-#echo -e ""$DEF"Backupstamp: $BKSTAMP"
-#notify "Fametest @ $NOWSTAMP"
