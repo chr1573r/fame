@@ -58,6 +58,7 @@ PREVIOUSCOLUMNS=`tput cols`
 PREVIOUSLINES=`tput lines`
 
 ## Locations (Arrays containing X&Y coords)
+POS_SPLASHSTATUSFIELD=(0 22)
 POS_HEADERTOPLINE=(22 0)
 POS_HEADERMIDTEXTFIELD=(24 1)
 POS_HEADERBOTTOM=(0 4)
@@ -131,6 +132,12 @@ gfx()
 							esac
 							tput cup $Y $X
 						;;
+
+						splashstatusfield)
+								X=${POS_SPLASHSTATUSFIELD[0]}
+								Y=${POS_SPLASHSTATUSFIELD[1]}
+								tput cup $Y $X
+						;;
 						*)
 							#tput cup Y X
 							tput cup $4 $3
@@ -179,7 +186,7 @@ gfx()
 			case "$2" in
 				splash)
 					clear
-					echo
+					echo TOPP
 					echo
 					echo
 					echo          
@@ -196,13 +203,7 @@ gfx()
 					echo
 					echo -e ""$GRAY"                    Fine "$LIGHTBLACK"-"$GRAY" Automated "$LIGHTBLACK"-"$GRAY" Minecraft "$LIGHTBLACK"-"$GRAY" Exports"
 					echo
-					echo
 					echo -e "                            "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"
-					echo
-					echo
-					echo
-					sleep 2
-					clear
 				;;
 
 				header)
@@ -298,7 +299,13 @@ gfx()
 						;;
 					esac
 				;;
-					
+		
+				splashstatus)
+					gfx core goto splashstatusfield
+					tput el
+					echo -e -n "$4"
+				;;
+
 			esac
 		;;
 
@@ -380,6 +387,17 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 	timeupdate
 #	echo DEBEWG:1:$1 2:$2 3:$3
 	case "$1" in
+
+		validate)
+			gfx write splashstatus
+			if [ -f settings.cfg ] ; then source settings.cfg; else gfx write splashstatus ""$YELLOW"Warning! Configuration file missing!"; fi
+			echo LANDET HER!
+			sleep 10
+			if [ -z "$REFRESHRATE" ]; then echo -e ""$YELLOW"WATCHDOG Warning: "$GRAY"REFRESHRATE not set, changing REFRESHRATE to 5 seconds."$DEF""; REFRESHRATE=5; sleep 2; fi
+
+		;;
+
+
 		notify)
 			case "$2" in
 				mc)
@@ -457,7 +475,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 
 			esac
 			gfx core sticky goto
-			;;
+		;;
 
 	esac
 }
@@ -466,6 +484,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 
 clear
 gfx draw splash # Display splash screen with logo
+fm validate
 gfx draw header top
 gfx draw header middle
 gfx draw header bottom
