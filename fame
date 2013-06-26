@@ -204,7 +204,7 @@ gfx()
 					echo
 					echo -e ""$GRAY"                    Fine "$LIGHTBLACK"-"$GRAY" Automated "$LIGHTBLACK"-"$GRAY" Minecraft "$LIGHTBLACK"-"$GRAY" Exports"
 					echo
-					echo -e "                            "$LIGHTBLACK"Cj Designs/"$LIGHTBLACK"CSDNSERVER.COM"
+					echo -e "                           "$LIGHTBLACK"Cj Designs//"$LIGHTBLACK"CSDNSERVER.COM"
 				;;
 
 				header)
@@ -228,6 +228,9 @@ gfx()
 							echo
 							echo -e ""$LIGHTCYAN"SERVER DESCRIPTION       SCREEN              CURRENT STATUS"$GRAY""
 						;;
+#_______________________________________________________________________________
+###########################Cj Designs//CSDNSERVER.COM###########################
+
 
 					esac
 				;;
