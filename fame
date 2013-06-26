@@ -82,6 +82,17 @@ gfx()
 		
 		core)
 			case "$2" in
+				
+				reinit)
+					REDRAW="YES"
+					TOPLINE="4"
+					CURRENTLINE="$TOPLINE"
+					PREVIOUSCOLUMNS=`tput cols`
+					PREVIOUSLINES=`tput lines`
+					fm log info "Re-initialized GFX"
+				;;
+
+
 				goto)
 					case "$3" in
 						column)
@@ -211,7 +222,6 @@ gfx()
 					case "$3" in
 
 						top)
-							clear
 							echo -e "$fametext"$GRAY" build $APPVERSION"$RED"      _________________________________________________________" 
 						;;
 
@@ -523,9 +533,12 @@ elif [ "$PREVIOUSLINES" != "$CURRENTLINES" ]; then
 	termreset
 fi
 fm validate
+while true; do
+clear
 gfx draw header top
 gfx draw header middle
 gfx draw header bottom
 fm console init
 fameprocess
-
+gfx core reinit
+done
