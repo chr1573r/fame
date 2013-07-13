@@ -75,6 +75,9 @@ POS_CONSOLEBOTTOMTEXTFIELD2=(54 79)
 
 fametext=""$LIGHTCYAN"F"$WHITE"."$LIGHTCYAN"A"$WHITE"."$LIGHTCYAN"M"$WHITE"."$LIGHTCYAN"E""$DEF"
 
+
+trap "{ reset; clear;echo fame $APPVERSION terminated at `date`; exit; }" SIGINT SIGTERM EXIT # Set trap for catching Ctrl-C and kills, so we can reset terminal upon exit
+
 gfx()
 {
 	timeupdate
@@ -216,6 +219,7 @@ gfx()
 					echo -e ""$GRAY"                    Fine "$LIGHTBLACK"-"$GRAY" Automated "$LIGHTBLACK"-"$GRAY" Minecraft "$LIGHTBLACK"-"$GRAY" Exports"
 					echo
 					echo -e "                           "$LIGHTBLACK"Cj Designs//"$LIGHTBLACK"CSDNSERVER.COM"
+					sleep 1
 				;;
 
 				header)
@@ -398,13 +402,13 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 	case "$1" in
 
 		validate)
-			if [ -z "$YOLOBRO" ]; then gfx write splashstatus "YOLOBRO not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
-			if [ -z "$BACKUPPATH" ]; then gfx write splashstatus "BACKUPPATH not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
-			if [ -z "$ERASEOLDERTHAN" ]; then gfx write splashstatus "not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
-			if [ -z "$SCPSERVER" ]; then gfx write splashstatus "SCPSERVER not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
-			if [ -z "$SCPUSER" ]; then gfx write splashstatus "SCPUSER not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
-			if [ -z "$SCPPATH" ]; then gfx write splashstatus "SCPPATH not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
-			if [ -z "$SCPPORT" ]; then gfx write splashstatus "SCPPORT not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$YOLOBRO" ]; then gfx write splashstatus "YOLOBRO not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$BACKUPPATH" ]; then gfx write splashstatus "BACKUPPATH not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$ERASEOLDERTHAN" ]; then gfx write splashstatus "not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$SCPSERVER" ]; then gfx write splashstatus "SCPSERVER not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$SCPUSER" ]; then gfx write splashstatus "SCPUSER not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$SCPPATH" ]; then gfx write splashstatus "SCPPATH not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
+			# if [ -z "$SCPPORT" ]; then gfx write splashstatus "SCPPORT not set! Using defaults"; fm log warn "$PREVIOUS_SPLASHSTATUS"; v=v; sleep 1;fi
 			VALIDATED=OK
 
 			#if [ -f settings.cfg ] ; then source settings.cfg; else gfx write splashstatus ""$YELLOW"Warning! Configuration file missing!"; fi
@@ -455,6 +459,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 				#fm notify cs "\e[5;37;01mUploading to $SCPSERVER\e[m\n"
 				echo "scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP" >> famedebug.log
 				scp -P $SCPPORT $CURRENTARCHIVE $SCPUSER@$SCPSERVER:$SCPPATH/$SERVERSCREEN/$LATESTSTAMP >> famedebug.log 2>&1
+				if [ $? != 0 ]; then fm log error "SCP Upload error!"; fi
 		;;
 
 		cleanup)
@@ -479,7 +484,7 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 					gfx core goto console textfield
 						for outputline in $( tail -n 4 famesys.log ); do
 						tput el
-						echo -e "$LIGHTBLACK""$outputline""$DEF"
+						echo -e "$DEF""$outputline""$DEF"
 					done
 					gfx write console time
 				;;
