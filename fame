@@ -242,8 +242,7 @@ gfx()
 							echo
 							echo -e ""$LIGHTCYAN"SERVER DESCRIPTION       SCREEN              CURRENT STATUS"$GRAY""
 						;;
-#_______________________________________________________________________________
-###########################Cj Designs//CSDNSERVER.COM###########################
+
 
 
 					esac
@@ -388,7 +387,6 @@ fameprocess()
 				CURRENTLINE=$(( CURRENTLINE + 1))
 				MSG_OK=$(( MSG_OK + 1))
 				gfx draw header update
-
 			
 			done < world.lst
 			gfx core goto 0 $CURRENTLINE
@@ -421,7 +419,8 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 			case "$2" in
 				mc)
 				fm log info "Sent msg to chat "$3""
-				screen -x $SERVERSCREEN -X stuff "`printf "say $3\r"`"
+				screen -x $SERVERSCREEN -X stuff "`printf "say $3\r"`" >> famedebug.log 2>&1
+				if [ $? != 0 ]; then fm log warn "Could not verify screen command!"; fi
 				;;
 
 				cs) # Changes current status on the active server
@@ -442,14 +441,16 @@ fm() # Main fame framework, combines other functions in powerful subfunctions
 		backup)
 				fm notify "Initializing backup.."
 				fm notify "Disabling world saving.."
-				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`"
+				screen -x $SERVERSCREEN -X stuff "`printf "save-off\r"`" >> famedebug.log 2>&1
+				if [ $? != 0 ]; then fm log warn "Could not verify screen command!"; fi
 				sleep 1
 				fm notify cs "Creating compressed backup.."
 				#fm notify cs "\e[5;37;01mCreating compressed backup..\e[m\n"
 				tar -cpvzf $CURRENTARCHIVE -C / $SERVERPATH >> famedebug.log 2>&1
 				sleep 1
 				fm notify "Enabling world saving.."
-				screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`"
+				screen -x $SERVERSCREEN -X stuff "`printf "save-on\r"`" >> famedebug.log 2>&1
+				if [ $? != 0 ]; then fm log warn "Could not verify screen command!"; fi
 				fm notify "Backup complete!"
 		;;
 
@@ -545,5 +546,6 @@ gfx draw header middle
 gfx draw header bottom
 fm console init
 fameprocess
+sleep 500
 gfx core reinit
 done
